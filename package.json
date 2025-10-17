@@ -1,0 +1,25 @@
+{
+  "name": "slefni",
+  "version": "0.0.1",
+  "description": "Salefni is a web application that allows users to simulate different types of loans online and submit credit requests, while administrators manage, review, and process those requests.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OussamaBenoujja/Slefni.git"
+  },
+  "keywords": [
+    "Loans",
+    "ReactJS",
+    "Credit",
+    "Finance"
+  ],
+  "author": "Oussama Benoujja",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/OussamaBenoujja/Slefni/issues"
+  },
+  "homepage": "https://github.com/OussamaBenoujja/Slefni#readme"
+}
