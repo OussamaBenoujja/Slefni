@@ -13,7 +13,7 @@ function login(req) {
 
   if (admin) {
     let token = createJWT(email);
-    return creatRes(`{"token" : ${token}}`, 200);
+    return creatRes(JSON.stringify({ token }), 200);
   } else {
     return creatRes(`{"message" : "wrong credentials"}`, 401);
   }
@@ -43,19 +43,49 @@ function createSimulation(req) {
   const db = JSON.parse(fs.readFileSync("./db.json"));
   let data = req.body;
   let sim = {};
+
   if (data) {
-    sim.id = db.simulations[db.simulations.length - 1].id + 1;
-    sim = { ...data };
+    sim.id = db.simulations.length
+      ? db.simulations[db.simulations.length - 1].id + 1
+      : 1;
+    sim = { ...data, createdAt: new Date().toISOString() };
     db.simulations.push(sim);
-    fs.writeFileSync("./db.json", JSON.stringify(db), (err) => {
-      console.log(
-        "error while writing to file endpoint :" +
-          req.method +
-          " path" +
-          req.path,
-      );
-    });
+
+    const app = {
+      id: db.applications.length
+        ? db.applications[db.applications.length - 1].id + 1
+        : 1,
+      simulationId: sim.id,
+      applicant: data.applicant || {},
+      project: sim.project,
+      loanAmount: sim.loanAmount,
+      duration: sim.duration,
+      monthlyPayment: sim.monthlyPayment,
+      status: "pending",
+      notes: [],
+      priority: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    db.applications.push(app);
+
+    const notif = {
+      id: db.notifications.length
+        ? db.notifications[db.notifications.length - 1].id + 1
+        : 1,
+      type: "NEW_APPLICATION",
+      applicationId: app.id,
+      title: `New Application from ${app.applicant?.fullName || "Guest"}`,
+      seen: false,
+      createdAt: new Date().toISOString(),
+    };
+
+    db.notifications.push(notif);
+
+    fs.writeFileSync("./db.json", JSON.stringify(db, null, 2));
   }
+
   return creatRes(JSON.stringify(sim), 201);
 }
 
@@ -70,14 +100,19 @@ function createApplication(req) {
   let app = {};
 
   if (data) {
-    app.id = db.applications.length
+    const nextId = db.applications.length
       ? db.applications[db.applications.length - 1].id + 1
       : 1;
-    app.status = "pending";
-    app.priority = false;
-    app.notes = [];
-    app.createdAt = new Date().toISOString();
-    app.updatedAt = new Date().toISOString();
+    // Merge incoming payload so fields like applicant/fullName are preserved
+    app = {
+      ...data,
+      id: nextId,
+      status: data.status || "pending",
+      priority: typeof data.priority === "boolean" ? data.priority : false,
+      notes: Array.isArray(data.notes) ? data.notes : [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
 
     db.applications.push(app);
 
@@ -93,7 +128,7 @@ function createApplication(req) {
     };
     db.notifications.push(notif);
 
-    fs.writeFileSync("./db.json", JSON.stringify(db));
+    fs.writeFileSync("./db.json", JSON.stringify(db, null, 2));
   }
 
   return creatRes(JSON.stringify(app), 201);
